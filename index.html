@@ -445,7 +445,7 @@ console.log('✅ Supabase bağlandı:', SUPABASE_URL);
     <div class="sb-user">
       <div class="user-av" id="uav"><div class="user-av-online"></div></div>
       <div style="flex:1;min-width:0"><div class="user-name" id="uname"></div><div class="user-status">Aktif</div></div>
-      <button class="logout-btn" onclick="doLogout()" title="Çıkış">⏻</button>
+      <button onclick="doLogout()" title="Çıkış Yap" style="background:rgba(226,75,74,.15);border:1px solid rgba(226,75,74,.3);color:#F87171;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;flex-shrink:0;white-space:nowrap;">Çıkış</button>
     </div>
   </div>
 
@@ -1101,8 +1101,17 @@ function onChatInput(e){
   const popup=document.getElementById('mention-popup');
   if(!popup) return;
   if(lastAt>=0){
-    const q=val.slice(lastAt+1).split(' ')[0].toLowerCase();
-    mentionMatches=ML.filter(m=>m.n.toLowerCase().includes(q)||m.id.includes(q));
+    // Cursor @ işaretinden sonra, boşluk yoksa ara
+    const afterAt=val.slice(lastAt+1);
+    if(afterAt.includes(' ') && afterAt.indexOf(' ') < afterAt.length-1){ closeMentionPopup(); return; }
+    const q=afterAt.split(' ')[0].toLowerCase();
+    // İsim, soyisim VEYA kısaltmayla ara (me → Melike, Melis)
+    mentionMatches=ML.filter(m=>{
+      const nameParts=m.n.toLowerCase().split(' ');
+      return m.n.toLowerCase().includes(q) || 
+             m.id.toLowerCase().includes(q) ||
+             nameParts.some(p=>p.startsWith(q));
+    });
     if(mentionMatches.length){
       mentionIdx=-1;
       popup.innerHTML=mentionMatches.map((m,i)=>`<div class="mention-item" onclick="insertMention('${m.id}')">
@@ -1365,6 +1374,176 @@ function initSidebarUnread(){
 document.getElementById('li-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
 document.addEventListener('DOMContentLoaded',()=>{ initSidebarUnread(); });
 setTimeout(initSidebarUnread, 100);
+</script>
+
+<script>
+// ══ SUPABASE REALTIME FIX ══
+let _realtimeBooted = false;
+
+async function loadFromSupabase() {
+  if (!window._supabase) return;
+  try {
+    // Görevleri yükle
+    const { data: dbTasks } = await _supabase.from('tasks').select('*').order('created_at',{ascending:false});
+    if (dbTasks && dbTasks.length > 0) {
+      tasks = dbTasks.map(t=>({
+        id:t.id, title:t.title, desc:t.description, comp:t.component,
+        unit:t.unit, status:t.status, prio:t.priority, dl:t.deadline,
+        ass:t.assignees||[], cmt:[], ca:t.created_at?.split('T')[0], ua:t.updated_at?.split('T')[0]
+      }));
+      render();
+      toast('Veriler yüklendi ✓','success');
+    }
+
+    // Mesajları yükle — tüm kanallar
+    const { data: dbMsgs } = await _supabase.from('messages').select('*').order('created_at',{ascending:true});
+    if (dbMsgs) {
+      Object.keys(messages).forEach(k=>messages[k]=[]);
+      dbMsgs.forEach(m=>{
+        if(!messages[m.channel]) messages[m.channel]=[];
+        if(!messages[m.channel].find(x=>x.id===m.id))
+          messages[m.channel].push({id:m.id,author:m.author_id,text:m.content,ca:m.created_at,taskRef:null});
+      });
+      if(curPage==='messages') renderMessages();
+    }
+
+    if (_realtimeBooted) return;
+    _realtimeBooted = true;
+
+    // Realtime — görevler
+    _supabase.channel('rt-tasks').on('postgres_changes',{event:'*',schema:'public',table:'tasks'},p=>{
+      if(p.eventType==='INSERT'){
+        const t=p.new;
+        if(!tasks.find(x=>x.id===t.id)){
+          tasks.unshift({id:t.id,title:t.title,desc:t.description,comp:t.component,unit:t.unit,status:t.status,prio:t.priority,dl:t.deadline,ass:t.assignees||[],cmt:[],ca:t.created_at?.split('T')[0],ua:t.updated_at?.split('T')[0]});
+          render(); playNotifSound(); toast('Yeni görev atandı!','info');
+        }
+      } else if(p.eventType==='UPDATE'){
+        const idx=tasks.findIndex(x=>x.id===p.new.id);
+        if(idx>=0){ const t=p.new; tasks[idx]={...tasks[idx],title:t.title,desc:t.description,status:t.status,prio:t.priority,dl:t.deadline,ass:t.assignees||[],ua:t.updated_at?.split('T')[0]}; render(); }
+      } else if(p.eventType==='DELETE'){
+        tasks=tasks.filter(x=>x.id!==p.old.id); render();
+      }
+    }).subscribe();
+
+    // Realtime — mesajlar (tüm kanallar tek subscriber)
+    _supabase.channel('rt-messages').on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},p=>{
+      const m=p.new;
+      if(!messages[m.channel]) messages[m.channel]=[];
+      if(messages[m.channel].find(x=>x.id===m.id)) return; // duplicate önle
+      messages[m.channel].push({id:m.id,author:m.author_id,text:m.content,ca:m.created_at,taskRef:null});
+
+      const isMyMsg = m.author_id===CU?.id;
+      const isActiveChannel = curPage==='messages' && curChannel===m.channel;
+
+      if(isActiveChannel && !isMyMsg){
+        // Ekrana ekle
+        const ma=document.getElementById('messages-area');
+        if(ma){
+          const author=M[m.author_id];
+          if(author){
+            const div=document.createElement('div');
+            div.className='msg-item with-avatar';
+            div.innerHTML=`<div class="msg-av" style="background:${author.c}">${author.i}</div>
+              <div class="msg-content">
+                <div class="msg-header"><span class="msg-author">${author.n}</span><span class="msg-time">az önce</span></div>
+                <div class="msg-text">${renderMsgText(m.content,m.author_id)}</div>
+              </div>`;
+            ma.appendChild(div); ma.scrollTop=ma.scrollHeight;
+          }
+        }
+        playMsgSound();
+      } else if(!isActiveChannel && !isMyMsg){
+        unread[m.channel]=(unread[m.channel]||0)+1;
+        updateSidebarUnread();
+        playNotifSound();
+      }
+
+      // @mention — beni etiketlediler mi?
+      if(CU && !isMyMsg && m.content.includes('@'+CU.id)){
+        pushNotif('mention', (M[m.author_id]?.n||'Biri')+' sizi #'+(CHANNELS[m.channel]?.name||m.channel)+' kanalında etiketledi.');
+        playMentionSound();
+        toast('@mention: '+(M[m.author_id]?.n||'')+' → #'+(CHANNELS[m.channel]?.name||m.channel),'mention');
+      }
+    }).subscribe();
+
+  } catch(e){ console.error('Supabase hata:',e); }
+}
+
+// initApp override — her login'de Supabase'den yükle
+const _origInitApp = window.initApp;
+window.initApp = function(){
+  _origInitApp && _origInitApp();
+  setTimeout(()=>{ if(window._supabase && window.CU) loadFromSupabase(); }, 500);
+};
+
+// sendMsg override — Supabase'e kaydet
+const _origSendMsg = window.sendMsg;
+window.sendMsg = async function(){
+  const ta=document.getElementById('chat-ta'); if(!ta) return;
+  const text=ta.value.trim(); if(!text) return;
+  if(!messages[curChannel]) messages[curChannel]=[];
+  const localMsg={id:'local-'+Date.now(),author:CU.id,text,ca:new Date().toISOString(),taskRef:null};
+  messages[curChannel].push(localMsg);
+  ta.value=''; ta.style.height='auto';
+  closeMentionPopup();
+
+  // UI'a ekle
+  const ma=document.getElementById('messages-area');
+  if(ma){
+    const m=M[CU.id];
+    const div=document.createElement('div');
+    div.className='msg-item with-avatar';
+    div.innerHTML=`<div class="msg-av" style="background:${m.c}">${m.i}</div>
+      <div class="msg-content">
+        <div class="msg-header"><span class="msg-author">${m.n}</span><span class="msg-time">şimdi</span></div>
+        <div class="msg-text">${renderMsgText(text,CU.id)}</div>
+      </div>`;
+    ma.appendChild(div); ma.scrollTop=ma.scrollHeight;
+    playMsgSound();
+  }
+
+  // Supabase'e kaydet
+  if(window._supabase){
+    const {data,error} = await _supabase.from('messages').insert({channel:curChannel,author_id:CU.id,content:text}).select().single();
+    if(data){ localMsg.id=data.id; } // local id'yi gerçek id ile değiştir
+    if(error) console.error('Mesaj kaydedilemedi:',error);
+  }
+
+  // @mention bildirimi
+  const mentioned=(text.match(/@(\w+\.\w+)/g)||[]).map(s=>s.slice(1)).filter(uid=>uid!==CU.id&&M[uid]);
+  if(mentioned.length){ playMentionSound(); toast('@mention gönderildi','mention'); }
+  updateSidebarUnread();
+};
+
+// saveTask override — Supabase'e kaydet
+const _origSaveTask = window.saveTask;
+window.saveTask = async function(){
+  const title=document.getElementById('f-title').value.trim(); if(!title) return;
+  const now=new Date().toISOString().split('T')[0];
+  const data={title,desc:document.getElementById('f-desc').value.trim(),comp:document.getElementById('f-comp').value,
+    unit:document.getElementById('f-unit').value,status:document.getElementById('f-status').value,
+    prio:document.getElementById('f-prio').value,dl:document.getElementById('f-dl').value,
+    ass:[...selAssignees],ua:now};
+
+  if(editingId){
+    const t=tasks.find(t=>t.id===editingId); Object.assign(t,data);
+    // Supabase güncelle
+    if(window._supabase) await _supabase.from('tasks').update({title:data.title,description:data.desc,component:data.comp,unit:data.unit,status:data.status,priority:data.prio,deadline:data.dl||null,assignees:data.ass}).eq('id',editingId);
+    toast('Görev güncellendi','info');
+  } else {
+    const localId=++NID;
+    tasks.push({id:localId,...data,cmt:[],ca:now});
+    toast('Görev oluşturuldu!','success');
+    // Supabase kaydet
+    if(window._supabase){
+      const {data:dbTask} = await _supabase.from('tasks').insert({title:data.title,description:data.desc,component:data.comp,unit:data.unit,status:data.status,priority:data.prio,deadline:data.dl||null,assignees:data.ass}).select().single();
+      if(dbTask){ const idx=tasks.findIndex(t=>t.id===localId); if(idx>=0) tasks[idx].id=dbTask.id; }
+    }
+    if(selAssignees.length) pushNotif('assigned','"'+title+'" görevi atandı.');
+  }
+  closeTaskModal(); render();
+};
 </script>
 </body>
 </html>
