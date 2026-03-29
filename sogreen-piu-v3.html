@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SoGreen PIU</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1A1D21;--bg2:#222529;--bg3:#2C2F33;--bg4:#36393f;
+  --accent:#1D9E75;--accent-l:#EAF3DE;--accent-d:#27500A;
+  --blue:#5B8DEF;--blue-l:#E8F0FF;--blue-d:#2B4A99;
+  --amber:#F0A500;--amber-l:#FFF3CD;--amber-d:#7A5000;
+  --red:#E24B4A;--red-l:#FFE8E8;--red-d:#8B1A1A;
+  --purple:#7C5CBF;--purple-l:#EDE8FF;
+  --text:#DCDDDE;--text2:#96989D;--text3:#6D6F78;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);
+  --white:#FFFFFF;--sidebar-w:240px;--ch-w:220px;
+}
+html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+
+/* ── LAYOUT ── */
+#app{display:flex;height:100vh;overflow:hidden}
+
+/* ── LEFT SIDEBAR (Slack-style) ── */
+#sidebar{width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.ws-header{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer}
+.ws-icon{width:34px;height:34px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ws-name{font-size:15px;font-weight:700;color:var(--white);line-height:1.2}
+.ws-status{font-size:11px;color:var(--accent);display:flex;align-items:center;gap:4px}
+.online-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+
+.sb-scroll{flex:1;overflow-y:auto;padding:8px 0}
+.sb-section{padding:4px 0 2px}
+.sb-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:6px 16px 4px;display:flex;align-items:center;justify-content:space-between}
+.sb-label button{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1;padding:0 2px}
+.sb-label button:hover{color:var(--text)}
+
+.nav-item{display:flex;align-items:center;gap:9px;width:100%;padding:5px 16px;border:none;background:none;color:var(--text2);font-size:14px;font-weight:400;text-align:left;cursor:pointer;border-radius:0;transition:background .1s,color .1s;position:relative}
+.nav-item:hover{background:rgba(255,255,255,.06);color:var(--white)}
+.nav-item.active{background:rgba(29,158,117,.25);color:var(--white);font-weight:500}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.7}
+.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700}
+.nav-bullet{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0;margin-left:2px}
+.nav-item.active .nav-bullet{background:var(--accent)}
+
+.ch-item{display:flex;align-items:center;gap:8px;width:100%;padding:4px 16px;border:none;background:none;color:var(--text3);font-size:14px;text-align:left;cursor:pointer;transition:background .1s,color .1s;border-radius:0}
+.ch-item:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.ch-item.active{background:rgba(29,158,117,.22);color:var(--white);font-weight:500}
+.ch-hash{font-size:15px;opacity:.5;flex-shrink:0;line-height:1}
+.ch-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--white);margin-left:auto;flex-shrink:0}
+.ch-unread-num{margin-left:auto;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700}
+
+.dm-item{display:flex;align-items:center;gap:8px;width:100%;padding:4px 16px;border:none;background:none;color:var(--text3);font-size:13px;text-align:left;cursor:pointer;transition:background .1s,color .1s}
+.dm-item:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.dm-item.active{background:rgba(29,158,117,.22);color:var(--white);font-weight:500}
+.dm-av{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0;position:relative}
+.dm-online{width:8px;height:8px;border-radius:50%;background:#23D160;border:2px solid var(--bg2);position:absolute;bottom:-2px;right:-2px}
+
+.sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px;background:var(--bg2)}
+.user-av{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;position:relative}
+.user-av-online{width:10px;height:10px;border-radius:50%;background:#23D160;border:2px solid var(--bg2);position:absolute;bottom:-2px;right:-2px}
+.user-name{font-size:13px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-status{font-size:11px;color:var(--text3)}
+.logout-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:4px;border-radius:4px;flex-shrink:0}
+.logout-btn:hover{color:var(--text);background:rgba(255,255,255,.08)}
+
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+
+/* ── TOPBAR ── */
+#topbar{height:48px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+.tb-icon{width:20px;height:20px;opacity:.6}
+.tb-title{font-size:15px;font-weight:700;color:var(--white)}
+.tb-desc{font-size:12px;color:var(--text3);margin-left:2px}
+.tb-divider{width:1px;height:20px;background:var(--border2);margin:0 4px}
+.tb-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.tb-btn{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:opacity .15s}
+.tb-btn-primary{background:var(--accent);color:#fff}
+.tb-btn-primary:hover{opacity:.88}
+.tb-btn-ghost{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--border2)}
+.tb-btn-ghost:hover{background:rgba(255,255,255,.12)}
+
+/* ── VIEW TABS (Asana-style) ── */
+#view-tabs{background:var(--bg);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:0;flex-shrink:0;overflow-x:auto}
+#view-tabs::-webkit-scrollbar{height:2px}
+.vtab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--text3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color .12s,border-color .12s;display:flex;align-items:center;gap:6px}
+.vtab:hover{color:var(--text)}
+.vtab.active{color:var(--white);border-bottom-color:var(--accent);font-weight:600}
+.vtab-count{font-size:11px;padding:1px 6px;border-radius:10px;background:rgba(255,255,255,.1);color:var(--text3)}
+.vtab.active .vtab-count{background:rgba(29,158,117,.3);color:var(--accent-l)}
+
+/* ── CONTENT ── */
+#content{flex:1;overflow-y:auto;padding:0}
+.page-pad{padding:20px 22px}
+
+/* ── TASK BOARD (Asana list view) ── */
+.task-list-header{display:flex;align-items:center;padding:8px 16px;background:var(--bg2);border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;gap:10px}
+.task-list-header .th-title{flex:1}
+.task-list-header .th-meta{display:flex;gap:20px}
+.th-col{width:90px;text-align:center}
+
+.task-section{margin-bottom:20px}
+.section-toggle{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);transition:background .12s}
+.section-toggle:hover{background:var(--bg3)}
+.section-toggle svg{width:12px;height:12px;transition:transform .2s}
+.section-toggle.open svg{transform:rotate(90deg)}
+.section-count{font-size:11px;color:var(--text3);margin-left:4px;font-weight:400}
+
+.task-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-top:none;cursor:pointer;transition:background .1s;position:relative}
+.task-row:hover{background:var(--bg3)}
+.task-row:last-child{border-radius:0 0 8px 8px}
+.task-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.task-check:hover{border-color:var(--accent)}
+.task-check.done{background:var(--accent);border-color:var(--accent)}
+.task-check.done::after{content:'✓';font-size:10px;color:#fff;font-weight:700}
+.task-name{flex:1;font-size:14px;color:var(--text);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task-name.done{text-decoration:line-through;color:var(--text3)}
+.task-tags{display:flex;gap:5px;align-items:center;flex-wrap:nowrap;flex-shrink:0}
+.tag{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500;white-space:nowrap}
+.task-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.prio-flag{font-size:12px}
+.dl-tag{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500;white-space:nowrap}
+.av-row{display:flex}
+.tav{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;border:2px solid var(--bg2);flex-shrink:0}
+.tav+.tav{margin-left:-6px}
+.status-pill{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;border:none;cursor:pointer;outline:none;white-space:nowrap}
+
+/* ── FILTERS ── */
+.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-btn{padding:5px 12px;border-radius:6px;font-size:12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;transition:all .12s;font-weight:400;display:flex;align-items:center;gap:5px}
+.filter-btn:hover{background:var(--bg4);color:var(--white)}
+.filter-btn.active{background:rgba(29,158,117,.25);color:var(--accent-l);border-color:rgba(29,158,117,.4);font-weight:600}
+.search-box{padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:13px;background:var(--bg3);color:var(--text);outline:none;width:200px}
+.search-box::placeholder{color:var(--text3)}
+.search-box:focus{border-color:rgba(29,158,117,.5)}
+.count-lbl{margin-left:auto;font-size:12px;color:var(--text3)}
+
+/* ── MESSAGING (Slack-style) ── */
+.msg-wrap{display:flex;height:100%;overflow:hidden}
+.msg-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.ch-header{padding:14px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.ch-header-name{font-size:16px;font-weight:700;color:var(--white)}
+.ch-header-desc{font-size:12px;color:var(--text3)}
+.ch-header-members{display:flex;margin-left:auto}
+.messages-area{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:0}
+.msg-group{margin-bottom:4px}
+.msg-item{display:flex;gap:12px;padding:3px 20px;transition:background .1s;border-radius:4px;margin:0 -20px}
+.msg-item:hover{background:rgba(255,255,255,.04)}
+.msg-item.with-avatar{padding-top:10px;margin-top:2px}
+.msg-av{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.msg-spacer{width:36px;flex-shrink:0}
+.msg-content{flex:1;min-width:0}
+.msg-header{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+.msg-author{font-size:14px;font-weight:700;color:var(--white)}
+.msg-time{font-size:11px;color:var(--text3)}
+.msg-text{font-size:14px;line-height:1.6;color:var(--text);word-break:break-word}
+.msg-text .mention{color:#7EA7D3;font-weight:600;background:rgba(126,167,211,.15);padding:0 3px;border-radius:3px}
+.msg-text .self-mention{color:var(--accent-l);font-weight:600;background:rgba(29,158,117,.2);padding:0 3px;border-radius:3px}
+.task-ref{display:inline-flex;align-items:center;gap:7px;margin-top:6px;padding:8px 12px;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);font-size:12px;color:var(--text);cursor:pointer;border-left:3px solid var(--accent);transition:background .12s;max-width:400px}
+.task-ref:hover{background:var(--bg4)}
+.task-ref-title{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.task-ref-status{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500;flex-shrink:0}
+
+/* ── CHAT INPUT (Slack-style) ── */
+.chat-input-wrap{padding:12px 20px 14px;flex-shrink:0}
+.chat-input-box{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;overflow:hidden;transition:border-color .15s}
+.chat-input-box:focus-within{border-color:rgba(29,158,117,.4)}
+.chat-input-toolbar{display:flex;align-items:center;gap:4px;padding:6px 10px 0}
+.tool-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:15px;padding:4px 6px;border-radius:4px;transition:color .12s,background .12s}
+.tool-btn:hover{color:var(--text);background:rgba(255,255,255,.08)}
+.chat-textarea{width:100%;background:none;border:none;color:var(--text);font-size:14px;padding:8px 12px 10px;resize:none;outline:none;min-height:40px;max-height:150px;line-height:1.5}
+.chat-textarea::placeholder{color:var(--text3)}
+.chat-input-bottom{display:flex;align-items:center;justify-content:space-between;padding:6px 10px 8px}
+.chat-hint{font-size:11px;color:var(--text3)}
+.send-btn{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;background:var(--accent);color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:opacity .15s}
+.send-btn:hover{opacity:.88}
+.send-btn:disabled{opacity:.35;cursor:default}
+
+/* ── MENTION POPUP ── */
+.mention-popup{position:absolute;bottom:100%;left:0;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:100;min-width:240px;max-height:200px;overflow-y:auto;display:none;margin-bottom:4px}
+.mention-popup.open{display:block}
+.mention-item{display:flex;align-items:center;gap:9px;padding:8px 12px;cursor:pointer;transition:background .1s}
+.mention-item:hover,.mention-item.selected{background:rgba(29,158,117,.2)}
+.m-av{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0}
+.m-name{font-size:13px;font-weight:600;color:var(--white)}
+.m-role{font-size:11px;color:var(--text3)}
+
+/* ── DASHBOARD ── */
+.dash-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:22px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.stat-label{font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.stat-value{font-size:28px;font-weight:700;color:var(--white)}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:3px}
+
+.section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.section-title{font-size:14px;font-weight:700;color:var(--white)}
+.see-all-btn{font-size:12px;color:var(--text3);background:none;border:1px solid var(--border2);border-radius:6px;padding:3px 10px;cursor:pointer;transition:background .12s}
+.see-all-btn:hover{background:var(--bg3);color:var(--text)}
+
+.comp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:22px}
+.comp-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent}
+.comp-name{font-size:13px;font-weight:700;color:var(--white);margin-bottom:6px}
+.comp-pct{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:700;float:right;margin-top:-22px}
+.prog-bg{height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-bottom:8px}
+.prog-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.comp-meta{font-size:11px;color:var(--text3);margin-bottom:8px}
+.owner-chips{display:flex;gap:5px;flex-wrap:wrap}
+.owner-chip{display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,.06);font-size:11px;color:var(--text2)}
+.oc-av{width:14px;height:14px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;color:#fff}
+
+/* ── WORKLOAD ── */
+.wl-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px}
+.wl-av{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.wl-info{flex:1;min-width:0}
+.wl-name{font-size:14px;font-weight:600;color:var(--white)}
+.wl-role{font-size:11px;color:var(--text3)}
+.wl-bar-wrap{display:flex;align-items:center;gap:10px;margin-top:7px}
+.wl-bar-bg{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px}
+.wl-bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.wl-count{font-size:12px;font-weight:600;white-space:nowrap}
+.wl-tasks-wrap{width:280px;flex-shrink:0}
+.wl-task-chips{display:flex;flex-direction:column;gap:3px}
+.wl-chip{font-size:11px;padding:3px 9px;border-radius:4px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text2);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .1s}
+.wl-chip:hover{background:rgba(255,255,255,.1);color:var(--white)}
+
+/* ── DECISIONS ── */
+.dec-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:10px;padding:14px 16px;margin-bottom:8px}
+.dec-title{font-size:14px;font-weight:700;color:var(--white);margin-bottom:5px}
+.dec-body{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:10px}
+.dec-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dec-tag{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600}
+
+/* ── NOTIFICATIONS ── */
+.notif-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:background .1s}
+.notif-card:hover{background:var(--bg3)}
+.notif-card.unread{border-left:3px solid var(--accent)}
+.notif-icon{font-size:20px;line-height:1.3;flex-shrink:0}
+.notif-msg{font-size:13px;line-height:1.5;margin-bottom:2px;color:var(--text)}
+.notif-card.unread .notif-msg{font-weight:500;color:var(--white)}
+.notif-time{font-size:11px;color:var(--text3)}
+.unread-pip{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px;margin-left:auto}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:540px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0}
+.modal-title{font-size:16px;font-weight:700;color:var(--white)}
+.modal-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:22px;line-height:1;padding:2px;border-radius:4px}
+.modal-close:hover{color:var(--text);background:rgba(255,255,255,.08)}
+.modal-body{padding:16px 24px 24px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg3);color:var(--white);outline:none;transition:border-color .15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:rgba(29,158,117,.5)}
+.form-textarea{resize:vertical;min-height:80px;line-height:1.5}
+.form-select option{background:var(--bg3)}
+.form-group{margin-bottom:14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.assignee-grid{display:flex;flex-wrap:wrap;gap:6px}
+.a-chip{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);font-size:12px;cursor:pointer;transition:all .12s;color:var(--text2)}
+.a-chip:hover{border-color:var(--border);color:var(--text)}
+.a-chip.sel{font-weight:600}
+.a-chip-av{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;flex-shrink:0}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+.btn-cancel{padding:8px 16px;border-radius:7px;background:var(--bg3);border:1px solid var(--border2);font-size:13px;color:var(--text2);cursor:pointer;transition:background .12s}
+.btn-cancel:hover{background:var(--bg4)}
+.btn-save{padding:8px 18px;border-radius:7px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:opacity .15s}
+.btn-save:hover{opacity:.88}
+.btn-save:disabled{opacity:.4;cursor:default}
+.btn-danger{padding:8px 14px;border-radius:7px;background:rgba(226,75,74,.2);color:var(--red);font-size:13px;font-weight:600;border:1px solid rgba(226,75,74,.3);cursor:pointer}
+.btn-danger:hover{background:rgba(226,75,74,.3)}
+
+/* ── DETAIL ── */
+.detail-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:14px}
+.dm-label{font-size:10px;color:var(--text3);margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.dm-val{font-size:13px;font-weight:500;color:var(--text)}
+.comment-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.comment-item{display:flex;gap:9px}
+.c-av{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0}
+.c-body{flex:1;background:var(--bg3);border-radius:8px;padding:8px 11px}
+.c-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.c-author{font-size:12px;font-weight:700;color:var(--white)}
+.c-time{font-size:10px;color:var(--text3)}
+.c-text{font-size:13px;line-height:1.5;color:var(--text)}
+.c-del{background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:0 4px;border-radius:3px}
+.c-del:hover{color:var(--red)}
+.cin-wrap{display:flex;gap:8px}
+.cin{flex:1;padding:8px 11px;border:1px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text);font-size:13px;outline:none}
+.cin:focus{border-color:rgba(29,158,117,.4)}
+.c-send{padding:7px 14px;border-radius:7px;background:var(--accent);color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer}
+
+/* ── TOAST ── */
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:12px 16px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:slideUp .2s ease;pointer-events:none;max-width:340px}
+.toast.success{border-left:3px solid var(--accent)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--blue)}
+.toast.mention{border-left:3px solid var(--amber)}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── LOGIN ── */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.login-card{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:32px 36px;width:380px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.login-logo{display:flex;flex-direction:column;align-items:center;margin-bottom:28px}
+.login-icon{width:56px;height:56px;border-radius:14px;background:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.login-title{font-size:22px;font-weight:700;color:var(--white);margin-bottom:4px;text-align:center}
+.login-sub{font-size:12px;color:var(--text3);text-align:center}
+.login-btn{width:100%;padding:11px;border-radius:8px;background:var(--accent);color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;margin-top:4px;transition:opacity .15s}
+.login-btn:hover{opacity:.88}
+.login-err{background:rgba(226,75,74,.15);border:1px solid rgba(226,75,74,.3);color:#F87171;font-size:12px;padding:9px 12px;border-radius:8px;margin-bottom:14px}
+.hint{font-size:11px;color:var(--text3);text-align:center;margin-top:16px}
+.hint code{background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--text)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-icon"><svg width="30" height="30" viewBox="0 0 30 30" fill="none"><path d="M15 3L12 10H5L10 15L8 22L15 18L22 22L20 15L25 10H18L15 3Z" fill="white"/></svg></div>
+      <div class="login-title">SoGreen PIU</div>
+      <div class="login-sub">Türkiye Sosyal Kapsayıcı Yeşil Geçiş Projesi</div>
+    </div>
+    <div class="form-group"><label class="form-label">Kurumsal E-posta</label><input id="li-email" class="form-input" type="email" placeholder="ad.soyad@sanayi.gov.tr"/></div>
+    <div class="form-group"><label class="form-label">Şifre</label><input id="li-pass" class="form-input" type="password" placeholder="••••••••"/></div>
+    <div id="li-err" class="login-err" style="display:none">E-posta veya şifre hatalı.</div>
+    <button class="login-btn" onclick="doLogin()">Giriş Yap</button>
+    <p class="hint">Demo şifre: <code>sogreen2026</code></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="ws-header">
+      <div class="ws-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L8 7H3L7 10L5.5 15L10 12.5L14.5 15L13 10L17 7H12L10 2Z" fill="white"/></svg></div>
+      <div><div class="ws-name">SoGreen PIU</div><div class="ws-status"><span class="online-dot"></span>Çevrimiçi</div></div>
+    </div>
+
+    <div class="sb-scroll">
+      <!-- Nav -->
+      <div class="sb-section">
+        <button class="nav-item active" data-page="dashboard" onclick="setPage('dashboard')">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".9"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/></svg>
+          Dashboard
+        </button>
+        <button class="nav-item" data-page="tasks" onclick="setPage('tasks')">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 4H13M3 8H10M3 12H12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Görevler
+        </button>
+        <button class="nav-item" data-page="workload" onclick="setPage('workload')">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="9" width="3" height="6" rx="1" fill="currentColor" opacity=".5"/><rect x="6.5" y="5" width="3" height="10" rx="1" fill="currentColor" opacity=".7"/><rect x="12" y="1" width="3" height="14" rx="1" fill="currentColor" opacity=".9"/></svg>
+          İş Yükü
+        </button>
+        <button class="nav-item" data-page="decisions" onclick="setPage('decisions')">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5L9.5 5.5H14L10.5 8L12 12L8 9.5L4 12L5.5 8L2 5.5H6.5L8 1.5Z" fill="currentColor" opacity=".7"/></svg>
+          Karar Logu
+        </button>
+        <button class="nav-item" data-page="notifications" onclick="setPage('notifications')">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M8 2C5.8 2 4 3.8 4 6V10L2.5 12H13.5L12 10V6C12 3.8 10.2 2 8 2ZM6.5 13C6.5 13.8 7.2 14.5 8 14.5C8.8 14.5 9.5 13.8 9.5 13H6.5Z" fill="currentColor" opacity=".7"/></svg>
+          Bildirimler
+          <span class="nav-badge" id="notif-badge" style="display:none">0</span>
+        </button>
+      </div>
+
+      <!-- Channels -->
+      <div class="sb-section" style="margin-top:8px">
+        <div class="sb-label">Kanallar <button onclick="setPage('messages')">+</button></div>
+        <button class="ch-item" data-ch="genel" onclick="openChannel('genel')"><span class="ch-hash">#</span>genel</button>
+        <button class="ch-item" data-ch="gof" onclick="openChannel('gof')"><span class="ch-hash">#</span>göf-operasyonlar <span class="ch-unread-num" id="ub-gof" style="display:none">1</span></button>
+        <button class="ch-item" data-ch="tesis" onclick="openChannel('tesis')"><span class="ch-hash">#</span>tesis-saha</button>
+        <button class="ch-item" data-ch="hiz" onclick="openChannel('hiz')"><span class="ch-hash">#</span>hızlandırma</button>
+        <button class="ch-item" data-ch="cevre" onclick="openChannel('cevre')"><span class="ch-hash">#</span>çevre-sosyal</button>
+        <button class="ch-item" data-ch="idm" onclick="openChannel('idm')"><span class="ch-hash">#</span>izleme-deg</button>
+        <button class="ch-item" data-ch="satinalma" onclick="openChannel('satinalma')"><span class="ch-hash">#</span>satınalma</button>
+        <button class="ch-item" data-ch="iletisim" onclick="openChannel('iletisim')"><span class="ch-hash">#</span>iletişim</button>
+        <button class="ch-item" data-ch="yonetim" onclick="openChannel('yonetim')"><span class="ch-hash">#</span>yönetim</button>
+        <button class="ch-item" data-ch="finans" onclick="openChannel('finans')"><span class="ch-hash">#</span>finans</button>
+      </div>
+    </div>
+
+    <div class="sb-user">
+      <div class="user-av" id="uav"><div class="user-av-online"></div></div>
+      <div style="flex:1;min-width:0"><div class="user-name" id="uname"></div><div class="user-status">Aktif</div></div>
+      <button class="logout-btn" onclick="doLogout()" title="Çıkış">⏻</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="topbar">
+      <svg class="tb-icon" viewBox="0 0 20 20" fill="none" id="tb-icon"><path d="M2 6H18M2 10H14M2 14H16" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span class="tb-title" id="tb-title">Dashboard</span>
+      <span class="tb-desc" id="tb-desc">SoGreen Sosyal Kapsayıcı Yeşil Geçiş Projesi</span>
+      <div class="tb-actions" id="tb-actions">
+        <button class="tb-btn tb-btn-primary" id="main-add-btn" onclick="onAddBtn()">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1V10M1 5.5H10" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          <span id="add-btn-lbl">Görev Ekle</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- View tabs -->
+    <div id="view-tabs" style="display:none"></div>
+
+    <div id="content"></div>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="overlay" id="task-modal" style="display:none" onclick="if(event.target===this)closeTaskModal()">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title" id="form-title">Yeni Görev</span><button class="modal-close" onclick="closeTaskModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Görev adı *</label><input id="f-title" class="form-input" placeholder="Ne yapılacak?"/></div>
+      <div class="form-group"><label class="form-label">Açıklama</label><textarea id="f-desc" class="form-textarea" placeholder="Detaylar, bağlam, bağlantılar..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Komponent</label>
+          <select id="f-comp" class="form-select"><option value="gof">Geri Ödemeli Finansman</option><option value="tesis">Tesis</option><option value="hiz">Hızlandırma & Kuluçka</option><option value="genel">Genel / PIU</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Birim</label>
+          <select id="f-unit" class="form-select"><option value="">— Seç —</option><option value="cevre">Çevre & Sosyal</option><option value="idm">İzleme & Değerlendirme</option><option value="yonetim">Yönetim</option><option value="satinalma">Satınalma</option><option value="iletisim">İletişim</option><option value="finans">Finans</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Deadline</label><input id="f-dl" class="form-input" type="date"/></div>
+        <div class="form-group"><label class="form-label">Öncelik</label>
+          <select id="f-prio" class="form-select"><option value="low">🟢 Düşük</option><option value="medium" selected>🟡 Orta</option><option value="high">🔴 Yüksek</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Durum</label>
+        <select id="f-status" class="form-select"><option value="todo">Yapılacak</option><option value="inprogress">Devam Ediyor</option><option value="review">İncelemede</option><option value="done">Tamamlandı</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Sorumlular</label><div class="assignee-grid" id="ag"></div></div>
+      <div class="modal-footer"><button class="btn-cancel" onclick="closeTaskModal()">İptal</button><button class="btn-save" id="save-btn" onclick="saveTask()">Görev Oluştur</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- DECISION MODAL -->
+<div class="overlay" id="dec-modal" style="display:none" onclick="if(event.target===this)closeDecModal()">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title">Karar Kaydı</span><button class="modal-close" onclick="closeDecModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Karar başlığı *</label><input id="dc-title" class="form-input" placeholder="Kararı özetleyin..."/></div>
+      <div class="form-group"><label class="form-label">Karar içeriği & gerekçe</label><textarea id="dc-body" class="form-textarea" style="min-height:100px" placeholder="Kararın detayları, gerekçesi, alternatifler..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Tür</label>
+          <select id="dc-type" class="form-select"><option value="operational">Operasyonel</option><option value="strategic">Stratejik</option><option value="procurement">Satınalma</option><option value="financial">Finansal</option><option value="technical">Teknik</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Komponent</label>
+          <select id="dc-comp" class="form-select"><option value="">Genel</option><option value="gof">GÖF</option><option value="tesis">Tesis</option><option value="hiz">Hızlandırma</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Karar sahibi</label><select id="dc-owner" class="form-select"></select></div>
+      <div class="modal-footer"><button class="btn-cancel" onclick="closeDecModal()">İptal</button><button class="btn-save" onclick="saveDecision()">Kaydet</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- TASK DETAIL -->
+<div class="overlay" id="detail-modal" style="display:none" onclick="if(event.target===this)closeDetail()">
+  <div class="modal" style="width:580px">
+    <div class="modal-hd"><span class="modal-title" id="dt-title" style="font-size:15px;max-width:470px;line-height:1.4"></span><button class="modal-close" onclick="closeDetail()">×</button></div>
+    <div class="modal-body">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="dt-badges"></div>
+      <div id="dt-desc" style="background:var(--bg3);border-radius:8px;padding:10px 13px;font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px;display:none"></div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Sorumlular</div>
+        <div id="dt-assignees" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+      <div class="detail-meta" id="dt-meta"></div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--white);margin-bottom:10px" id="dt-ctitle">Yorumlar</div>
+        <div class="comment-list" id="dt-comments"></div>
+        <div class="cin-wrap"><input id="cin" class="cin" placeholder="Yorum ekle... (Enter ile gönder)" onkeydown="if(event.key==='Enter')addComment()"/><button class="c-send" onclick="addComment()">Gönder</button></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border)">
+        <button class="btn-danger" onclick="deleteTask(curDetailId);closeDetail()">Görevi Sil</button>
+        <div style="display:flex;gap:8px"><button class="btn-cancel" onclick="closeDetail()">Kapat</button><button class="btn-save" onclick="editCurTask()">Düzenle</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ── SOUND ENGINE ────────────────────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let actx = null;
+
+function getACtx() {
+  if (!actx) actx = new AudioCtx();
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+
+function playMsgSound() {
+  try {
+    const ctx = getACtx();
+    const t = ctx.currentTime;
+    // Slack-like "pop" sound
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, t);
+    osc.frequency.exponentialRampToValueAtTime(660, t + 0.08);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.18, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    osc.start(t); osc.stop(t + 0.2);
+  } catch(e) {}
+}
+
+function playMentionSound() {
+  try {
+    const ctx = getACtx();
+    const t = ctx.currentTime;
+    // Double ping for mentions
+    [0, 0.12].forEach(delay => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1100, t + delay);
+      osc.frequency.exponentialRampToValueAtTime(880, t + delay + 0.1);
+      gain.gain.setValueAtTime(0, t + delay);
+      gain.gain.linearRampToValueAtTime(0.22, t + delay + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.22);
+      osc.start(t + delay); osc.stop(t + delay + 0.25);
+    });
+  } catch(e) {}
+}
+
+function playNotifSound() {
+  try {
+    const ctx = getACtx();
+    const t = ctx.currentTime;
+    // Softer notification chime
+    [880, 1100].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t + i * 0.15);
+      gain.gain.setValueAtTime(0, t + i * 0.15);
+      gain.gain.linearRampToValueAtTime(0.15, t + i * 0.15 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.15 + 0.3);
+      osc.start(t + i * 0.15); osc.stop(t + i * 0.15 + 0.35);
+    });
+  } catch(e) {}
+}
+
+function playTaskDoneSound() {
+  try {
+    const ctx = getACtx();
+    const t = ctx.currentTime;
+    // Rising success sound
+    [440, 550, 660].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, t + i * 0.1);
+      gain.gain.linearRampToValueAtTime(0.12, t + i * 0.1 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.1 + 0.25);
+      osc.start(t + i * 0.1); osc.stop(t + i * 0.1 + 0.3);
+    });
+  } catch(e) {}
+}
+
+// ── DATA ─────────────────────────────────────────────────────────
+const M = {
+  'mustafa.yazar':  { n:'Mustafa Yazar',  i:'MY', r:'İzleme & Değerlendirme', e:'mustafa.yazar@sanayi.gov.tr',  c:'#1D9E75', unit:'idm' },
+  'yener.akay':     { n:'Yener Akay',     i:'YA', r:'İzleme & Değerlendirme', e:'yener.akay@sanayi.gov.tr',     c:'#534AB7', unit:'idm' },
+  'melis.kuzuoglu': { n:'Melis Kuzuoğlu', i:'MK', r:'Sosyal Uzman',           e:'melis.kuzuoglu@sanayi.gov.tr', c:'#5B8DEF', unit:'cevre' },
+  'tugce.yaman':    { n:'Tuğçe Yaman',    i:'TY', r:'Sosyal Uzman',           e:'tugce.yaman@sanayi.gov.tr',    c:'#F0A500', unit:'cevre' },
+  'ali.tellioglu':  { n:'Ali Tellioğlu',  i:'AT', r:'Çevre Mühendisi',        e:'ali.tellioglu@sanayi.gov.tr',  c:'#E26B4A', unit:'cevre' },
+  'melike.yuksel':  { n:'Melike Yüksel',  i:'ML', r:'İletişim Uzmanı',        e:'melike.yuksel@sanayi.gov.tr',  c:'#2DB596', unit:'iletisim' },
+  'demet.akcan':    { n:'Demet Akcan',    i:'DA', r:'Koordinatör Yardımcısı', e:'demet.akcan@sanayi.gov.tr',    c:'#BF5CBF', unit:'yonetim' },
+  'firat.aydin':    { n:'Fırat Aydın',    i:'FA', r:'Satın Alma Uzmanı',      e:'firat.aydin@sanayi.gov.tr',    c:'#5B8DEF', unit:'satinalma' },
+  'ali.eser':       { n:'Ali Eser',       i:'AE', r:'Satın Alma Uzmanı',      e:'ali.eser@sanayi.gov.tr',       c:'#4CAF7D', unit:'satinalma' },
+  'hande.kara':     { n:'Hande Kara',     i:'HK', r:'Koordinatör',            e:'hande.kara@sanayi.gov.tr',     c:'#7C5CBF', unit:'yonetim' },
+};
+const ML = Object.entries(M).map(([id,m])=>({id,...m}));
+
+const COMPS = {
+  gof:   { l:'Geri Ödemeli Finansman', s:'GÖF',         c:'#5B8DEF', bg:'rgba(91,141,239,.2)',  t:'#93B8FF', o:['mustafa.yazar'] },
+  tesis: { l:'Tesis',                  s:'Tesis',        c:'#1D9E75', bg:'rgba(29,158,117,.2)', t:'#4ECFA0', o:['tugce.yaman','ali.tellioglu','yener.akay'] },
+  hiz:   { l:'Hızlandırma & Kuluçka', s:'Hızlandırma',  c:'#F0A500', bg:'rgba(240,165,0,.2)',   t:'#FFD166', o:['melis.kuzuoglu'] },
+  genel: { l:'Genel / PIU',            s:'PIU',          c:'#888',    bg:'rgba(136,136,136,.15)',t:'#AAAAAA', o:[] },
+};
+const UNITS = {
+  cevre:    { l:'Çevre & Sosyal',         c:'#1D9E75' },
+  idm:      { l:'İzleme & Değerlendirme', c:'#534AB7' },
+  yonetim:  { l:'Yönetim',               c:'#7C5CBF' },
+  satinalma:{ l:'Satınalma',             c:'#5B8DEF' },
+  iletisim: { l:'İletişim',              c:'#E26B4A' },
+  finans:   { l:'Finans',                c:'#4CAF7D' },
+};
+const SS = { todo:{bg:'rgba(136,135,128,.2)',t:'#96989D'}, inprogress:{bg:'rgba(91,141,239,.2)',t:'#93B8FF'}, review:{bg:'rgba(240,165,0,.2)',t:'#FFD166'}, done:{bg:'rgba(29,158,117,.2)',t:'#4ECFA0'} };
+const SL = { todo:'Yapılacak', inprogress:'Devam Ediyor', review:'İncelemede', done:'Tamamlandı' };
+const PL = { low:'Düşük', medium:'Orta', high:'Yüksek' };
+const PC = { low:'#4ECFA0', medium:'#FFD166', high:'#E24B4A' };
+const PFLAGS = { low:'🟢', medium:'🟡', high:'🔴' };
+const DT = { operational:'Operasyonel', strategic:'Stratejik', procurement:'Satınalma', financial:'Finansal', technical:'Teknik' };
+const DTC = { operational:'#5B8DEF', strategic:'#7C5CBF', procurement:'#F0A500', financial:'#4CAF7D', technical:'#888' };
+
+const CHANNELS = {
+  genel:     { name:'genel',             desc:'Tüm PIU — duyurular ve genel koordinasyon' },
+  gof:       { name:'göf-operasyonlar',  desc:'GÖF fon operasyonları ve ajans koordinasyonu' },
+  tesis:     { name:'tesis-saha',        desc:'Saha ziyaretleri ve tesis raporları' },
+  hiz:       { name:'hızlandırma',       desc:'Kuluçka ve hızlandırma programı' },
+  cevre:     { name:'çevre-sosyal',      desc:'Çevre & Sosyal birim haberleşmesi' },
+  idm:       { name:'izleme-deg',        desc:'İzleme & Değerlendirme koordinasyonu' },
+  satinalma: { name:'satınalma',         desc:'Satınalma süreçleri ve ihale takibi' },
+  iletisim:  { name:'iletişim',          desc:'İletişim materyalleri ve medya koordinasyonu' },
+  yonetim:   { name:'yönetim',           desc:'Koordinatörlük ve yönetim kararları' },
+  finans:    { name:'finans',            desc:'Ödemeler, bütçe ve finansal raporlama' },
+};
+
+// ── STATE ─────────────────────────────────────────────────────────
+let CU = null, curPage = 'dashboard', curComp = 'all', curSF = 'all';
+let curDetailId = null, editingId = null, selAssignees = [], curChannel = 'genel';
+let NID = 300, MSGID = 100;
+
+let tasks = [
+  { id:1,  title:'GÖF Başvuru Değerlendirme Kılavuzu',      desc:'57.6M EUR fon için başvuru değerlendirme kriterleri ve puanlama rehberi', comp:'gof',   unit:'idm',       status:'inprogress', prio:'high',   dl:'2026-04-10', ass:['mustafa.yazar'],                           cmt:[], ca:'2026-03-01', ua:'2026-03-20' },
+  { id:2,  title:'KAYS veri girişi şablonu güncelleme',      desc:'10 kalkınma ajansı için Excel makro şablonu revizyonu ve eğitim notları', comp:'tesis', unit:'idm',       status:'todo',       prio:'medium', dl:'2026-04-05', ass:['yener.akay','ali.tellioglu'],               cmt:[], ca:'2026-03-05', ua:'2026-03-05' },
+  { id:3,  title:'GÖF sosyal medya iletişim paketi',         desc:'LinkedIn/Twitter içerikleri ve Bakan konuşma taslağı hazırlandı',         comp:'gof',   unit:'iletisim',  status:'done',       prio:'medium', dl:'2026-03-28', ass:['melike.yuksel'],                            cmt:[], ca:'2026-03-10', ua:'2026-03-25' },
+  { id:4,  title:'Kuluçka programı uygulama çerçevesi',      desc:'10 ajans için hızlandırma programı rehberi taslağı',                      comp:'hiz',   unit:'cevre',     status:'todo',       prio:'high',   dl:'2026-04-20', ass:['melis.kuzuoglu'],                           cmt:[], ca:'2026-03-12', ua:'2026-03-12' },
+  { id:5,  title:'Tesis ziyaret raporu – Q1 2026',           desc:'Saha ziyaretleri konsolide raporu ve ajans değerlendirmeleri',            comp:'tesis', unit:'cevre',     status:'inprogress', prio:'high',   dl:'2026-04-15', ass:['tugce.yaman','ali.tellioglu','yener.akay'],  cmt:[], ca:'2026-03-15', ua:'2026-03-22' },
+  { id:6,  title:'PIU aylık ilerleme raporu – Mart',         desc:'Dünya Bankası için aylık ilerleme raporu (İngilizce)',                    comp:'genel', unit:'yonetim',   status:'todo',       prio:'high',   dl:'2026-04-01', ass:['hande.kara','demet.akcan'],                  cmt:[], ca:'2026-03-18', ua:'2026-03-18' },
+  { id:7,  title:'Satın alma planı güncellemesi – 2026',     desc:'2026 yılı satın alma takvimi ve bütçe revizyonu',                        comp:'genel', unit:'satinalma', status:'inprogress', prio:'medium', dl:'2026-04-08', ass:['firat.aydin','ali.eser'],                   cmt:[], ca:'2026-03-20', ua:'2026-03-24' },
+  { id:8,  title:'SKDM eğitim programı tasarımı',            desc:'Sosyal kapsayıcılık ve dezavantajlı grup kriterleri eğitimi',             comp:'hiz',   unit:'cevre',     status:'todo',       prio:'low',    dl:'2026-05-01', ass:['melis.kuzuoglu','tugce.yaman'],             cmt:[], ca:'2026-03-22', ua:'2026-03-22' },
+  { id:9,  title:'GÖF fon akış infografik güncelleme',       desc:'PIU→Ajans→Yararlanıcı akış görseli ve animasyonu',                       comp:'gof',   unit:'iletisim',  status:'todo',       prio:'medium', dl:'2026-04-12', ass:['melike.yuksel','mustafa.yazar'],             cmt:[], ca:'2026-03-23', ua:'2026-03-23' },
+  { id:10, title:'Ajans ödeme talepleri incelemesi',         desc:'Q1 ödeme taleplerinin doğrulanması ve onay süreci',                      comp:'genel', unit:'finans',    status:'review',     prio:'high',   dl:'2026-04-03', ass:['hande.kara'],                               cmt:[], ca:'2026-03-24', ua:'2026-03-26' },
+];
+
+let decisions = [
+  { id:1, title:'GÖF Başvuru Değerlendirme Kriterleri Onayı', body:'57.6M EUR GÖF fonunun dağılımı için 10 ajans başvurusunu değerlendirmek amacıyla puanlama kriterleri koordinatör tarafından onaylandı. Çevre, sosyal etki ve finansal sürdürülebilirlik ağırlıkları belirlendi.', type:'strategic', comp:'gof', owner:'hande.kara', date:'2026-03-25' },
+  { id:2, title:'KAYS Veri Standartları Güncelleme Kararı', body:'İzleme ve Değerlendirme birimi tarafından ajansların veri girişinde kullanacağı KAYS standartları revize edildi. Excel şablonunun zorunlu kullanımına karar verildi.', type:'operational', comp:'tesis', owner:'mustafa.yazar', date:'2026-03-20' },
+  { id:3, title:'Satınalma Takvimi Q2 2026', body:'Satınalma birimi ile koordinasyon sonucunda Q2 2026 için danışmanlık hizmetleri ihalesi Nisan sonu başlatılacak. Teknik şartname hazırlığı Fırat Aydın koordinasyonunda yürütülecek.', type:'procurement', comp:'', owner:'firat.aydin', date:'2026-03-18' },
+];
+
+let notifs = [
+  { id:1, type:'deadline_soon', msg:'"PIU aylık ilerleme raporu" 5 gün içinde bitiyor.', read:false, ca:'2026-03-27T08:00:00' },
+  { id:2, type:'deadline_soon', msg:'"Ajans ödeme talepleri incelemesi" 7 gün içinde bitiyor.', read:false, ca:'2026-03-26T08:00:00' },
+  { id:3, type:'assigned',      msg:'"GÖF Başvuru Değerlendirme Kılavuzu" size atandı.', read:true, ca:'2026-03-20T10:30:00' },
+];
+
+let messages = {
+  genel: [
+    { id:1, author:'hande.kara',    text:'Merhaba ekip! GÖF ihale lansmanı 25 Mart\'ta başarıyla gerçakleşti. @mustafa.yazar ve @melike.yuksel\'e teşekkürler. Harika iş çıkardınız! 🎉', ca:'2026-03-25T14:30:00', taskRef:null },
+    { id:2, author:'melike.yuksel', text:'Bakan\'ın açılış konuşması çok iyi geçti. Sosyal medya içerikleri yayında, ilk 2 saatte 1.2k etkileşim aldı.', ca:'2026-03-25T15:10:00', taskRef:3 },
+    { id:3, author:'mustafa.yazar', text:'GÖF başvuru kılavuzu için deadline yaklaşıyor. @yener.akay KAYS şablonunu tamamladı mı?', ca:'2026-03-27T09:00:00', taskRef:1 },
+    { id:4, author:'yener.akay',    text:'Şablon %80 tamamlandı, yarına kadar bitireceğim. Birkaç validasyon kuralı kaldı.', ca:'2026-03-27T09:25:00', taskRef:null },
+  ],
+  gof: [
+    { id:1, author:'mustafa.yazar', text:'Başvuru değerlendirme kriterleri onaylandı. Kılavuz taslağını bu hafta paylaşacağım.', ca:'2026-03-26T10:00:00', taskRef:1 },
+    { id:2, author:'hande.kara',    text:'@demet.akcan Ajanslarla koordinasyon toplantısı için Nisan 3\'ü ayarlayabilir misin?', ca:'2026-03-26T11:30:00', taskRef:null },
+    { id:3, author:'demet.akcan',   text:'Tabii, Nisan 3 saat 14:00\'e toplantı oluşturuyorum. Davet göndereyim mi herkese?', ca:'2026-03-26T11:45:00', taskRef:null },
+  ],
+  tesis: [
+    { id:1, author:'tugce.yaman',   text:'Q1 saha ziyaretleri tamamlandı. 8 ajandan 7\'sinde ziyaret gerçekleştirildi.', ca:'2026-03-24T16:00:00', taskRef:5 },
+    { id:2, author:'ali.tellioglu', text:'Konya ve Gaziantep ajanslarında ciddi çevresel bulgular var. Rapora ekledim, @tugce.yaman incelemelisin.', ca:'2026-03-25T09:15:00', taskRef:5 },
+  ],
+  hiz:[], cevre:[], idm:[], satinalma:[], iletisim:[], yonetim:[], finans:[],
+};
+
+let unread = { genel:0, gof:1, tesis:0, hiz:0, cevre:0, idm:0, satinalma:0, iletisim:0, yonetim:0, finans:0 };
+
+// ── AUTH ──────────────────────────────────────────────────────────
+const DEMO = Object.fromEntries(ML.map(m=>[m.e,{id:m.id}]));
+function doLogin(){
+  const e=document.getElementById('li-email').value.trim();
+  const p=document.getElementById('li-pass').value;
+  const u=DEMO[e];
+  if(u && p==='sogreen2026'){
+    CU={id:u.id,...M[u.id]};
+    document.getElementById('li-err').style.display='none';
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    // Unlock audio on first interaction
+    getACtx();
+    initApp();
+  } else {
+    document.getElementById('li-err').style.display='block';
+  }
+}
+document.getElementById('li-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+function doLogout(){ CU=null; document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display='flex'; actx=null; }
+
+function initApp(){
+  const av=document.getElementById('uav');
+  av.style.background=CU.c; av.textContent=CU.i;
+  document.getElementById('uname').textContent=CU.n;
+  updateBadges();
+  render();
+  // Simulate incoming notification after 4s
+  setTimeout(()=>{
+    if(!CU) return;
+    pushNotif('mention', `@${CU.n.split(' ')[0]} — Hande Kara #genel kanalında sizi etiketledi.`);
+    unread.genel = (unread.genel||0) + 1;
+    const ub = document.getElementById('ub-genel');
+    if(ub){ ub.style.display=''; ub.textContent=unread.genel; }
+    updateSidebarUnread();
+    playMentionSound();
+    toast(`Yeni mention: Hande Kara #genel kanalında`, 'mention');
+  }, 4000);
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────
+const PAGE_TITLES = { dashboard:'Dashboard', tasks:'Görevler', workload:'İş Yükü', decisions:'Karar Logu', notifications:'Bildirimler' };
+
+function setPage(p){
+  curPage=p; curSF='all'; curComp='all';
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===p));
+  document.querySelectorAll('.ch-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tb-title').textContent = PAGE_TITLES[p] || p;
+  document.getElementById('tb-desc').textContent = 'SoGreen Sosyal Kapsayıcı Yeşil Geçiş Projesi';
+  const addBtn = document.getElementById('main-add-btn');
+  const lbl = document.getElementById('add-btn-lbl');
+  if(p==='decisions'){ addBtn.style.display='flex'; lbl.textContent='Karar Kaydet'; }
+  else if(p==='notifications'||p==='workload'){ addBtn.style.display='none'; }
+  else { addBtn.style.display='flex'; lbl.textContent='Görev Ekle'; }
+  renderViewTabs();
+  render();
+}
+
+function openChannel(ch){
+  curPage='messages'; curChannel=ch;
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.ch-item').forEach(b=>b.classList.toggle('active',b.dataset.ch===ch));
+  unread[ch]=0; updateSidebarUnread(); updateBadges();
+  document.getElementById('tb-title').textContent='#'+CHANNELS[ch].name;
+  document.getElementById('tb-desc').textContent=CHANNELS[ch].desc;
+  document.getElementById('main-add-btn').style.display='none';
+  document.getElementById('view-tabs').style.display='none';
+  renderMessages();
+}
+
+function onAddBtn(){ if(curPage==='decisions') openDecModal(); else openTaskForm(); }
+
+// ── VIEW TABS ─────────────────────────────────────────────────────
+const TABS_FOR = {
+  tasks: [
+    {id:'all',l:'Tümü'},{id:'gof',l:'GÖF'},{id:'tesis',l:'Tesis'},{id:'hiz',l:'Hızlandırma'},
+    {id:'cevre',l:'Çevre & Sosyal'},{id:'idm',l:'İzleme & Değerlendirme'},
+    {id:'yonetim',l:'Yönetim'},{id:'satinalma',l:'Satınalma'},{id:'iletisim',l:'İletişim'},{id:'finans',l:'Finans'},
+  ],
+};
+
+function renderViewTabs(){
+  const bar=document.getElementById('view-tabs');
+  const tabs=TABS_FOR[curPage];
+  if(!tabs){ bar.style.display='none'; return; }
+  bar.style.display='flex';
+  bar.innerHTML=tabs.map(t=>{
+    const cnt=t.id==='all'?tasks.length:tasks.filter(x=>x.comp===t.id||x.unit===t.id).length;
+    return `<button class="vtab${curComp===t.id?' active':''}" onclick="setTabComp('${t.id}')">${t.l}<span class="vtab-count">${cnt}</span></button>`;
+  }).join('');
+}
+function setTabComp(id){ curComp=id; renderViewTabs(); renderContent(); }
+
+// ── RENDER ────────────────────────────────────────────────────────
+function render(){ renderViewTabs(); renderContent(); }
+function renderContent(){
+  const c=document.getElementById('content');
+  if(curPage==='dashboard')     { c.className='page-pad'; c.innerHTML=renderDashboard(); }
+  else if(curPage==='tasks')    { c.className='page-pad'; c.innerHTML=renderTasks(); }
+  else if(curPage==='workload') { c.className='page-pad'; c.innerHTML=renderWorkload(); }
+  else if(curPage==='decisions'){ c.className='page-pad'; c.innerHTML=renderDecisions(); }
+  else if(curPage==='notifications'){ c.className='page-pad'; c.innerHTML=renderNotifications(); }
+  else if(curPage==='messages') renderMessages();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function du(d){ if(!d)return null; return Math.ceil((new Date(d)-new Date().setHours(0,0,0,0))/86400000); }
+function fmtDate(d){ if(!d)return '—'; return new Date(d+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short',year:'numeric'}); }
+function fmtRel(iso){ const diff=Date.now()-new Date(iso).getTime(); const m=Math.floor(diff/60000); if(m<60)return 'bugün '+new Date(iso).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); const h=Math.floor(m/60); if(h<24)return `${h} sa önce`; return `${Math.floor(h/24)} gün önce`; }
+
+function dlTag(d,s){
+  if(s==='done') return `<span class="dl-tag" style="background:rgba(136,135,128,.2);color:var(--text3)">Tamamlandı</span>`;
+  if(!d) return '';
+  const dd=du(d); let bg,t,l;
+  if(dd<0){bg='rgba(226,75,74,.25)';t='#F87171';l=`${Math.abs(dd)}g geçti`}
+  else if(dd===0){bg='rgba(240,165,0,.25)';t='#FFD166';l='Bugün'}
+  else if(dd<=3){bg='rgba(240,165,0,.2)';t='#FFD166';l=`${dd}g kaldı`}
+  else{bg='rgba(29,158,117,.2)';t='#4ECFA0';l=fmtDate(d)}
+  return `<span class="dl-tag" style="background:${bg};color:${t}">${l}</span>`;
+}
+function avRow(ass=[]){
+  return `<div class="av-row">${ass.slice(0,4).map(a=>{ const m=M[a]; return m?`<div class="tav" style="background:${m.c}" title="${m.n}">${m.i}</div>`:''; }).join('')}${ass.length>4?`<div class="tav" style="background:rgba(255,255,255,.12)">+${ass.length-4}</div>`:''}</div>`;
+}
+function compTag(id){ const c=COMPS[id]; return c?`<span class="tag" style="background:${c.bg};color:${c.t}">${c.s}</span>`:''; }
+function unitTag(id){ const u=UNITS[id]; return u?`<span class="tag" style="background:${u.c}20;color:${u.c}">${u.l}</span>`:''; }
+function statusPill(s,id){
+  const ss=SS[s]||SS.todo;
+  return `<select class="status-pill" style="background:${ss.bg};color:${ss.t}" onchange="qStatus(${id},this.value);event.stopPropagation()" onclick="event.stopPropagation()">
+    ${Object.entries(SL).map(([k,v])=>`<option value="${k}"${s===k?' selected':''}>${v}</option>`).join('')}
+  </select>`;
+}
+
+function taskRow(t){
+  const dd=du(t.dl); let bl='';
+  if(t.status!=='done'&&dd!==null){ if(dd<0) bl='border-left:2px solid var(--red)!important'; else if(dd<=2) bl='border-left:2px solid var(--amber)!important'; }
+  return `<div class="task-row" style="${bl}" onclick="openDetail(${t.id})">
+    <div class="task-check${t.status==='done'?' done':''}" onclick="toggleDone(${t.id});event.stopPropagation()"></div>
+    <span class="prio-flag">${PFLAGS[t.prio]}</span>
+    <span class="task-name${t.status==='done'?' done':''}">${t.title}</span>
+    <div class="task-tags">${compTag(t.comp)}${t.unit?unitTag(t.unit):''}</div>
+    <div class="task-right">
+      ${dlTag(t.dl,t.status)}
+      ${avRow(t.ass)}
+      ${statusPill(t.status,t.id)}
+    </div>
+  </div>`;
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────
+function renderDashboard(){
+  const tot=tasks.length, done=tasks.filter(t=>t.status==='done').length;
+  const ov=tasks.filter(t=>t.status!=='done'&&t.dl&&du(t.dl)<0).length;
+  const soon=tasks.filter(t=>t.status!=='done'&&t.dl&&du(t.dl)>=0&&du(t.dl)<=5).length;
+
+  const stats=`<div class="dash-grid">
+    ${[{l:'Toplam Görev',v:tot,s:'aktif proje',c:'var(--white)'},{l:'Tamamlanan',v:done,s:`%${tot?Math.round(done/tot*100):0} tamamlandı`,c:'#4ECFA0'},{l:'Geciken',v:ov,s:'deadline geçti',c:'#F87171'},{l:'Bu Hafta',v:soon,s:'5 gün içinde bitiyor',c:'#FFD166'}].map(s=>`<div class="stat-card"><div class="stat-label">${s.l}</div><div class="stat-value" style="color:${s.c}">${s.v}</div><div class="stat-sub">${s.s}</div></div>`).join('')}
+  </div>`;
+
+  const compCards=Object.entries(COMPS).map(([id,c])=>{
+    const ct=tasks.filter(t=>t.comp===id), cd=ct.filter(t=>t.status==='done').length, pct=ct.length?Math.round(cd/ct.length*100):0;
+    const owners=c.o.map(oid=>{ const m=M[oid]; return m?`<div class="owner-chip"><div class="oc-av" style="background:${m.c}">${m.i}</div>${m.n.split(' ')[0]}</div>`:''; }).join('');
+    return `<div class="comp-card" style="border-left-color:${c.c}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="comp-name">${c.l}</div>
+        <span class="comp-pct" style="background:${c.bg};color:${c.t}">%${pct}</span>
+      </div>
+      <div class="prog-bg"><div class="prog-fill" style="width:${pct}%;background:${c.c}"></div></div>
+      <div class="comp-meta">${ct.length} görev · ${cd} tamamlandı</div>
+      <div class="owner-chips">${owners}</div>
+    </div>`;
+  }).join('');
+
+  const urgent=tasks.filter(t=>t.status!=='done'&&t.dl&&du(t.dl)<=5).sort((a,b)=>new Date(a.dl)-new Date(b.dl)).slice(0,5);
+  const recentD=decisions.slice(-2).reverse();
+
+  return `${stats}
+  <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
+    <div>
+      <div class="section-hd"><div class="section-title">Komponent Durumu</div></div>
+      <div class="comp-grid">${compCards}</div>
+      <div class="section-hd"><div class="section-title">Acil Görevler</div><button class="see-all-btn" onclick="setPage('tasks')">Tümü →</button></div>
+      <div style="border-radius:8px;overflow:hidden">
+        ${urgent.length?urgent.map(taskRow).join(''):'<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;background:var(--bg2);border-radius:8px">Acil görev yok ✓</div>'}
+      </div>
+    </div>
+    <div>
+      <div class="section-hd"><div class="section-title">Son Kararlar</div><button class="see-all-btn" onclick="setPage('decisions')">Tümü →</button></div>
+      ${recentD.map(d=>`<div class="dec-card" style="margin-bottom:8px;cursor:pointer;padding:12px 14px">
+        <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:3px">${d.title}</div>
+        <div style="font-size:11px;color:var(--text3)">${fmtDate(d.date)} · ${M[d.owner]?.n||''}</div>
+      </div>`).join('')}
+      <div class="section-hd" style="margin-top:14px"><div class="section-title">Kanal Aktivitesi</div></div>
+      ${Object.entries(CHANNELS).slice(0,5).map(([id,ch])=>{
+        const mc=messages[id]?.length||0;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openChannel('${id}')">
+          <span style="font-size:14px;color:var(--text3);">#</span>
+          <span style="font-size:13px;color:var(--text);flex:1">${ch.name}</span>
+          <span style="font-size:11px;color:var(--text3)">${mc} mesaj</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+// ── TASKS ─────────────────────────────────────────────────────────
+function getFiltered(){
+  let list=[...tasks];
+  if(curComp!=='all') list=list.filter(t=>t.comp===curComp||t.unit===curComp);
+  if(curSF!=='all') list=list.filter(t=>t.status===curSF);
+  const q=(document.getElementById('tsearch')||{}).value||'';
+  if(q) list=list.filter(t=>t.title.toLowerCase().includes(q.toLowerCase())||t.desc?.toLowerCase().includes(q.toLowerCase()));
+  return list.sort((a,b)=>{ if(!a.dl)return 1; if(!b.dl)return -1; return new Date(a.dl)-new Date(b.dl); });
+}
+function renderTasks(){
+  const list=getFiltered();
+  const sfBtns=[{id:'all',l:'Tümü'},...Object.entries(SL).map(([id,l])=>({id,l}))].map(s=>`<button class="filter-btn${curSF===s.id?' active':''}" onclick="setSF('${s.id}')">${s.l}</button>`).join('');
+  const grouped={ todo:[], inprogress:[], review:[], done:[] };
+  list.forEach(t=>{ if(grouped[t.status]) grouped[t.status].push(t); else grouped.todo.push(t); });
+  const sections=[
+    {id:'inprogress',l:'Devam Ediyor',c:'#5B8DEF'},{id:'todo',l:'Yapılacak',c:'#96989D'},
+    {id:'review',l:'İncelemede',c:'#F0A500'},{id:'done',l:'Tamamlandı',c:'#1D9E75'},
+  ];
+  const taskHtml=sections.map(s=>{
+    const items=grouped[s.id]; if(!items.length&&curSF!=='all') return '';
+    return `<div class="task-section">
+      <div class="section-toggle open" onclick="this.classList.toggle('open');this.nextElementSibling.style.display=this.classList.contains('open')?'':'none'">
+        <svg viewBox="0 0 12 12" fill="none"><path d="M4 2L8 6L4 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span style="color:${s.c}">${s.l}</span>
+        <span class="section-count">${items.length} görev</span>
+      </div>
+      <div>${items.length?items.map(taskRow).join(''):'<div style="padding:14px 16px;background:var(--bg2);border:1px solid var(--border);border-top:none;font-size:12px;color:var(--text3)">Bu durumda görev yok.</div>'}</div>
+    </div>`;
+  }).join('');
+  return `<div class="filter-bar">
+    <input id="tsearch" class="search-box" placeholder="🔍 Görev ara..." oninput="liveSearch()"/>
+    <div style="display:flex;gap:4px">${sfBtns}</div>
+    <span class="count-lbl">${list.length} görev</span>
+  </div>${taskHtml}`;
+}
+function setSF(s){ curSF=s; render(); }
+function liveSearch(){ renderContent(); }
+function toggleDone(id){
+  const t=tasks.find(t=>t.id===id); if(!t) return;
+  t.status=t.status==='done'?'todo':'done'; t.ua=new Date().toISOString().split('T')[0];
+  if(t.status==='done'){ playTaskDoneSound(); toast('Görev tamamlandı! ✓','success'); }
+  else toast('Görev yeniden açıldı');
+  render();
+}
+function qStatus(id,v){
+  const t=tasks.find(t=>t.id===id); if(!t) return;
+  t.status=v; t.ua=new Date().toISOString().split('T')[0];
+  if(v==='done'){ playTaskDoneSound(); toast('Tamamlandı! ✓','success'); }
+  else toast('Durum güncellendi');
+  if(curPage==='dashboard') render(); else renderContent();
+}
+
+// ── MESSAGES ─────────────────────────────────────────────────────
+let mentionIdx=-1, mentionMatches=[];
+
+function renderMessages(){
+  const c=document.getElementById('content');
+  c.className='';
+  c.style.cssText='flex:1;overflow:hidden;display:flex;flex-direction:column;height:100%';
+  c.innerHTML=buildChatHTML();
+  scrollChat();
+  const ta=document.getElementById('chat-ta');
+  if(ta) ta.addEventListener('input',onChatInput);
+}
+
+function buildChatHTML(){
+  const ch=CHANNELS[curChannel];
+  const msgs=messages[curChannel]||[];
+  let msgHtml='';
+  let lastAuthor='', lastTime=0;
+  msgs.forEach((msg,i)=>{
+    const m=M[msg.author]; if(!m) return;
+    const t=new Date(msg.ca).getTime();
+    const isNew=msg.author!==lastAuthor||(t-lastTime>5*60000);
+    lastAuthor=msg.author; lastTime=t;
+    const txt=renderMsgText(msg.text, msg.author);
+    const task=msg.taskRef?tasks.find(t=>t.id===msg.taskRef):null;
+    const taskHtml=task?`<div class="task-ref" onclick="openDetail(${task.id})"><span>📋</span><span class="task-ref-title">${task.title}</span><span class="task-ref-status" style="background:${(SS[task.status]||SS.todo).bg};color:${(SS[task.status]||SS.todo).t}">${SL[task.status]}</span></div>`:'';
+    if(isNew){
+      msgHtml+=`<div class="msg-item with-avatar">
+        <div class="msg-av" style="background:${m.c}">${m.i}</div>
+        <div class="msg-content">
+          <div class="msg-header"><span class="msg-author">${m.n}</span><span class="msg-time">${fmtRel(msg.ca)}</span></div>
+          <div class="msg-text">${txt}${taskHtml}</div>
+        </div>
+      </div>`;
+    } else {
+      msgHtml+=`<div class="msg-item">
+        <div class="msg-spacer"></div>
+        <div class="msg-content"><div class="msg-text">${txt}${taskHtml}</div></div>
+      </div>`;
+    }
+  });
+
+  // Members
+  const allMembers=ML.map(m=>`<div class="tav" style="background:${m.c};width:26px;height:26px;font-size:8px;border-radius:6px" title="${m.n}">${m.i}</div>`).join('');
+
+  return `<div class="msg-main" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+    <div class="ch-header">
+      <div><div class="ch-header-name">#${ch.name}</div><div class="ch-header-desc">${ch.desc}</div></div>
+      <div class="ch-header-members" style="gap:3px">${allMembers}</div>
+    </div>
+    <div class="messages-area" id="messages-area">
+      <div style="padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:16px">
+        <div style="font-size:24px;margin-bottom:4px">#</div>
+        <div style="font-size:18px;font-weight:700;color:var(--white)">${ch.name}</div>
+        <div style="font-size:13px;color:var(--text3);margin-top:3px">${ch.desc} — Bu kanalın başlangıcı budur.</div>
+      </div>
+      ${msgHtml||'<div style="text-align:center;padding:30px;color:var(--text3);font-size:13px">Henüz mesaj yok. İlk mesajı gönderin!</div>'}
+    </div>
+    <div class="chat-input-wrap">
+      <div class="chat-input-box" style="position:relative">
+        <div id="mention-popup" class="mention-popup"></div>
+        <textarea class="chat-textarea" id="chat-ta" rows="1" placeholder="#${ch.name} kanalına mesaj yaz..." onkeydown="chatKeyDown(event)"></textarea>
+        <div class="chat-input-bottom">
+          <span class="chat-hint">@mention · /task görev bağla · Enter gönder</span>
+          <button class="send-btn" onclick="sendMsg()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1L13 7L1 13V8.5L9 7L1 5.5V1Z" fill="white"/></svg>
+            Gönder
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderMsgText(text, authorId){
+  return text.replace(/@(\w+\.\w+)/g,(match,uid)=>{
+    const mm=M[uid];
+    if(!mm) return match;
+    const isSelf=CU&&uid===CU.id;
+    return `<span class="${isSelf?'self-mention':'mention'}">@${mm.n}</span>`;
+  });
+}
+
+function scrollChat(){ setTimeout(()=>{ const ma=document.getElementById('messages-area'); if(ma) ma.scrollTop=ma.scrollHeight; },50); }
+
+function chatKeyDown(e){
+  const popup=document.getElementById('mention-popup');
+  if(popup&&popup.classList.contains('open')){
+    if(e.key==='ArrowDown'){ e.preventDefault(); mentionIdx=Math.min(mentionIdx+1,mentionMatches.length-1); highlightMention(); return; }
+    if(e.key==='ArrowUp'){ e.preventDefault(); mentionIdx=Math.max(mentionIdx-1,0); highlightMention(); return; }
+    if(e.key==='Enter'||e.key==='Tab'){ e.preventDefault(); if(mentionIdx>=0&&mentionMatches[mentionIdx]) insertMention(mentionMatches[mentionIdx].id); return; }
+    if(e.key==='Escape'){ closeMentionPopup(); return; }
+  }
+  if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); }
+}
+
+function highlightMention(){
+  const items=document.querySelectorAll('#mention-popup .mention-item');
+  items.forEach((el,i)=>el.classList.toggle('selected',i===mentionIdx));
+}
+
+function onChatInput(e){
+  const val=e.target.value;
+  e.target.style.height='auto';
+  e.target.style.height=Math.min(e.target.scrollHeight,150)+'px';
+  const lastAt=val.lastIndexOf('@');
+  const popup=document.getElementById('mention-popup');
+  if(!popup) return;
+  if(lastAt>=0){
+    const q=val.slice(lastAt+1).split(' ')[0].toLowerCase();
+    mentionMatches=ML.filter(m=>m.n.toLowerCase().includes(q)||m.id.includes(q));
+    if(mentionMatches.length){
+      mentionIdx=-1;
+      popup.innerHTML=mentionMatches.map((m,i)=>`<div class="mention-item" onclick="insertMention('${m.id}')">
+        <div class="m-av" style="background:${m.c}">${m.i}</div>
+        <div><div class="m-name">${m.n}</div><div class="m-role">${m.r}</div></div>
+      </div>`).join('');
+      popup.classList.add('open'); return;
+    }
+  }
+  closeMentionPopup();
+}
+
+function closeMentionPopup(){ const p=document.getElementById('mention-popup'); if(p) p.classList.remove('open'); mentionMatches=[]; mentionIdx=-1; }
+
+function insertMention(uid){
+  const ta=document.getElementById('chat-ta'); if(!ta) return;
+  const val=ta.value, lastAt=val.lastIndexOf('@');
+  ta.value=val.slice(0,lastAt)+'@'+uid+' ';
+  closeMentionPopup(); ta.focus();
+}
+
+function sendMsg(){
+  const ta=document.getElementById('chat-ta'); if(!ta) return;
+  const text=ta.value.trim(); if(!text) return;
+  if(!messages[curChannel]) messages[curChannel]=[];
+  const newMsg={ id:MSGID++, author:CU.id, text, ca:new Date().toISOString(), taskRef:null };
+  messages[curChannel].push(newMsg);
+  ta.value=''; ta.style.height='auto';
+  closeMentionPopup();
+
+  // Append to UI
+  const ma=document.getElementById('messages-area');
+  if(ma){
+    const m=M[CU.id];
+    const div=document.createElement('div');
+    div.className='msg-item with-avatar';
+    div.innerHTML=`<div class="msg-av" style="background:${m.c}">${m.i}</div>
+      <div class="msg-content">
+        <div class="msg-header"><span class="msg-author">${m.n}</span><span class="msg-time">şimdi</span></div>
+        <div class="msg-text">${renderMsgText(text,CU.id)}</div>
+      </div>`;
+    ma.appendChild(div);
+    ma.scrollTop=ma.scrollHeight;
+    playMsgSound();
+  }
+
+  // Check mentions
+  const mentioned=(text.match(/@(\w+\.\w+)/g)||[]).map(s=>s.slice(1)).filter(uid=>uid!==CU.id&&M[uid]);
+  if(mentioned.length){
+    mentioned.forEach(uid=>{ pushNotif('mention',`${CU.n} #${CHANNELS[curChannel].name} kanalında @${M[uid].n}'i etiketledi.`); });
+    playMentionSound();
+    toast(`@mention gönderildi — ${mentioned.map(uid=>M[uid].n).join(', ')}`, 'mention');
+  }
+
+  updateSidebarUnread();
+}
+
+function updateSidebarUnread(){
+  Object.entries(unread).forEach(([id,cnt])=>{
+    const el=document.getElementById('ub-'+id);
+    if(el){ el.style.display=cnt?'':'none'; el.textContent=cnt; }
+  });
+  updateBadges();
+}
+
+// ── WORKLOAD ─────────────────────────────────────────────────────
+function renderWorkload(){
+  return ML.map(m=>{
+    const mt=tasks.filter(t=>t.ass?.includes(m.id)&&t.status!=='done');
+    const tot=tasks.filter(t=>t.ass?.includes(m.id));
+    const done=tot.filter(t=>t.status==='done').length;
+    const ov=mt.filter(t=>t.dl&&du(t.dl)<0).length;
+    const pct=Math.min(100,mt.length*20);
+    const col=pct>80?'var(--red)':pct>50?'var(--amber)':'#4ECFA0';
+    return `<div class="wl-card">
+      <div class="wl-av" style="background:${m.c}">${m.i}</div>
+      <div class="wl-info">
+        <div class="wl-name">${m.n}</div>
+        <div class="wl-role">${m.r} · ${UNITS[m.unit]?.l||''}</div>
+        <div class="wl-bar-wrap">
+          <div class="wl-bar-bg"><div class="wl-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+          <span class="wl-count" style="color:${col}">${mt.length} aktif</span>
+          ${ov?`<span style="font-size:11px;color:var(--red);font-weight:600">· ${ov} geciken</span>`:''}
+          <span style="font-size:11px;color:var(--text3)">${done} tamamlandı</span>
+        </div>
+      </div>
+      <div class="wl-tasks-wrap">
+        <div class="wl-task-chips">${mt.slice(0,4).map(t=>`<div class="wl-chip" onclick="openDetail(${t.id})" title="${t.title}">${PFLAGS[t.prio]} ${t.title.length>30?t.title.slice(0,30)+'…':t.title}</div>`).join('')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── DECISIONS ─────────────────────────────────────────────────────
+function renderDecisions(){
+  return `<div>${decisions.map(d=>{
+    const o=M[d.owner]; const comp=d.comp?COMPS[d.comp]:null; const col=DTC[d.type]||'#888';
+    return `<div class="dec-card">
+      <div class="dec-title">${d.title}</div>
+      <div class="dec-body">${d.body}</div>
+      <div class="dec-footer">
+        ${o?`<span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><span style="width:18px;height:18px;border-radius:4px;background:${o.c};display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff">${o.i}</span>${o.n}</span>`:''}
+        <span class="dec-tag" style="background:${col}20;color:${col}">${DT[d.type]}</span>
+        ${comp?`<span class="dec-tag" style="background:${comp.bg};color:${comp.t}">${comp.s}</span>`:''}
+        <span class="dec-tag" style="background:rgba(29,158,117,.2);color:#4ECFA0">Aktif</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--text3)">${fmtDate(d.date)}</span>
+      </div>
+    </div>`;
+  }).join('')}${!decisions.length?'<div style="text-align:center;padding:40px;color:var(--text3);font-size:13px">Henüz karar kaydı yok.</div>':''}</div>`;
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────────────
+const NI={ assigned:'📋', deadline_soon:'⏰', deadline_overdue:'🔴', status_changed:'🔄', comment_added:'💬', mention:'💬' };
+function renderNotifications(){
+  const un=notifs.filter(n=>!n.read).length;
+  return `<div style="max-width:680px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <span style="font-size:13px;color:var(--text3)">${un} okunmamış</span>
+      ${un?`<button style="font-size:12px;color:var(--text2);background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:4px 12px;cursor:pointer" onclick="markAllRead()">Tümünü okundu işaretle</button>`:''}
+    </div>
+    ${notifs.map(n=>`<div class="notif-card${n.read?'':' unread'}" onclick="markRead(${n.id})">
+      <span class="notif-icon">${NI[n.type]||'🔔'}</span>
+      <div style="flex:1"><div class="notif-msg">${n.msg}</div><div class="notif-time">${fmtRel(n.ca)}</div></div>
+      ${!n.read?'<div class="unread-pip"></div>':''}
+    </div>`).join('')}
+    ${!notifs.length?'<div style="text-align:center;padding:40px;color:var(--text3)">Henüz bildirim yok.</div>':''}
+  </div>`;
+}
+function markRead(id){ const n=notifs.find(n=>n.id===id); if(!n||n.read)return; n.read=true; updateBadges(); if(curPage==='notifications') renderContent(); }
+function markAllRead(){ notifs.forEach(n=>n.read=true); updateBadges(); renderContent(); }
+function updateBadges(){
+  const nc=notifs.filter(n=>!n.read).length;
+  const nb=document.getElementById('notif-badge'); if(nb){ nb.style.display=nc?'':'none'; nb.textContent=nc; }
+}
+function pushNotif(type,msg){ notifs.unshift({id:NID++,type,msg,read:false,ca:new Date().toISOString()}); updateBadges(); playNotifSound(); }
+
+// ── TASK FORM ──────────────────────────────────────────────────────
+function openTaskForm(editId=null){
+  editingId=editId; selAssignees=[];
+  document.getElementById('form-title').textContent=editId?'Görevi Düzenle':'Yeni Görev';
+  document.getElementById('save-btn').textContent=editId?'Güncelle':'Görev Oluştur';
+  const def=new Date(Date.now()+7*86400000).toISOString().split('T')[0];
+  ['f-title','f-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-comp').value='gof';
+  document.getElementById('f-unit').value='';
+  document.getElementById('f-status').value='todo';
+  document.getElementById('f-prio').value='medium';
+  document.getElementById('f-dl').value=def;
+  if(editId){ const t=tasks.find(t=>t.id===editId); if(!t) return;
+    document.getElementById('f-title').value=t.title;
+    document.getElementById('f-desc').value=t.desc||'';
+    document.getElementById('f-comp').value=t.comp;
+    document.getElementById('f-unit').value=t.unit||'';
+    document.getElementById('f-status').value=t.status;
+    document.getElementById('f-prio').value=t.prio;
+    document.getElementById('f-dl').value=t.dl||'';
+    selAssignees=[...t.ass];
+  }
+  renderAG(); document.getElementById('task-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('f-title').focus(),60);
+}
+function renderAG(){
+  document.getElementById('ag').innerHTML=ML.map(m=>{
+    const sel=selAssignees.includes(m.id);
+    return `<button class="a-chip${sel?' sel':''}" style="${sel?`background:${m.c}25;border-color:${m.c};color:${m.c}`:'color:var(--text2)'}" onclick="toggleA('${m.id}')">
+      <div class="a-chip-av" style="background:${m.c}">${m.i}</div>${m.n}
+    </button>`;
+  }).join('');
+}
+function toggleA(id){ selAssignees=selAssignees.includes(id)?selAssignees.filter(a=>a!==id):[...selAssignees,id]; renderAG(); }
+function closeTaskModal(){ document.getElementById('task-modal').style.display='none'; editingId=null; }
+function saveTask(){
+  const title=document.getElementById('f-title').value.trim(); if(!title) return;
+  const now=new Date().toISOString().split('T')[0];
+  const data={ title, desc:document.getElementById('f-desc').value.trim(), comp:document.getElementById('f-comp').value,
+    unit:document.getElementById('f-unit').value, status:document.getElementById('f-status').value,
+    prio:document.getElementById('f-prio').value, dl:document.getElementById('f-dl').value,
+    ass:[...selAssignees], ua:now };
+  if(editingId){ const t=tasks.find(t=>t.id===editingId); Object.assign(t,data); toast('Görev güncellendi','info'); }
+  else { tasks.push({id:++NID,...data,cmt:[],ca:now}); toast('Görev oluşturuldu!','success');
+    if(selAssignees.length){ pushNotif('assigned',`"${title}" görevi atandı.`); } }
+  closeTaskModal(); render();
+}
+
+// ── DECISION FORM ──────────────────────────────────────────────────
+function openDecModal(){
+  ['dc-title','dc-body'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('dc-type').value='operational';
+  document.getElementById('dc-comp').value='';
+  document.getElementById('dc-owner').innerHTML=ML.map(m=>`<option value="${m.id}">${m.n}</option>`).join('');
+  document.getElementById('dec-modal').style.display='flex';
+}
+function closeDecModal(){ document.getElementById('dec-modal').style.display='none'; }
+function saveDecision(){
+  const title=document.getElementById('dc-title').value.trim(); if(!title) return;
+  decisions.push({id:++NID,title,body:document.getElementById('dc-body').value.trim(),type:document.getElementById('dc-type').value,comp:document.getElementById('dc-comp').value,owner:document.getElementById('dc-owner').value,date:new Date().toISOString().split('T')[0]});
+  closeDecModal(); toast('Karar kaydedildi','success'); render();
+}
+
+// ── DETAIL ────────────────────────────────────────────────────────
+function openDetail(id){
+  curDetailId=id; const t=tasks.find(t=>t.id===id); if(!t) return;
+  document.getElementById('dt-title').textContent=t.title;
+  const ss=SS[t.status]||SS.todo;
+  document.getElementById('dt-badges').innerHTML=`${compTag(t.comp)}${t.unit?unitTag(t.unit):''}${dlTag(t.dl,t.status)}<span class="tag" style="background:${ss.bg};color:${ss.t}">${SL[t.status]}</span><span class="tag" style="background:${PC[t.prio]}22;color:${PC[t.prio]}">${PFLAGS[t.prio]} ${PL[t.prio]}</span>`;
+  const dd=document.getElementById('dt-desc');
+  if(t.desc){dd.textContent=t.desc;dd.style.display='block';}else dd.style.display='none';
+  document.getElementById('dt-assignees').innerHTML=t.ass.length?t.ass.map(a=>{ const m=M[a]; return m?`<div style="display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:6px;background:${m.c}20;border:1px solid ${m.c}35"><div style="width:18px;height:18px;border-radius:4px;background:${m.c};display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff">${m.i}</div><span style="font-size:12px;font-weight:600;color:${m.c}">${m.n}</span></div>`:'' }).join(''):'<span style="font-size:12px;color:var(--text3)">Atanmamış</span>';
+  document.getElementById('dt-meta').innerHTML=`<div><div class="dm-label">Deadline</div><div class="dm-val">${fmtDate(t.dl)}</div></div><div><div class="dm-label">Öncelik</div><div class="dm-val">${PFLAGS[t.prio]} ${PL[t.prio]}</div></div><div><div class="dm-label">Oluşturulma</div><div class="dm-val">${fmtDate(t.ca)}</div></div><div><div class="dm-label">Güncelleme</div><div class="dm-val">${fmtDate(t.ua)}</div></div>`;
+  renderComments(t);
+  document.getElementById('cin').value='';
+  document.getElementById('detail-modal').style.display='flex';
+}
+function renderComments(t){
+  document.getElementById('dt-ctitle').textContent=`Yorumlar (${t.cmt.length})`;
+  document.getElementById('dt-comments').innerHTML=t.cmt.map(c=>{ const m=M[c.aid]; const own=c.aid===CU?.id;
+    return `<div class="comment-item"><div class="c-av" style="background:${m?.c||'#888'}">${m?.i||'?'}</div>
+      <div class="c-body"><div class="c-header"><span class="c-author">${m?.n||'?'}</span><div style="display:flex;align-items:center;gap:4px"><span class="c-time">${fmtRel(c.ca)}</span>${own?`<button class="c-del" onclick="delCmt(${t.id},${c.id})">×</button>`:''}</div></div><div class="c-text">${c.txt}</div></div>
+    </div>`;
+  }).join('');
+}
+function addComment(){ const inp=document.getElementById('cin'); if(!inp) return; const txt=inp.value.trim(); if(!txt) return;
+  const t=tasks.find(t=>t.id===curDetailId); if(!t) return;
+  t.cmt.push({id:Date.now(),aid:CU.id,txt,ca:new Date().toISOString()});
+  inp.value=''; renderComments(t);
+  playMsgSound();
+  pushNotif('comment_added',`"${t.title}" görevine yorum eklendi.`);
+}
+function delCmt(tid,cid){ const t=tasks.find(t=>t.id===tid); if(!t)return; t.cmt=t.cmt.filter(c=>c.id!==cid); renderComments(t); }
+function closeDetail(){ document.getElementById('detail-modal').style.display='none'; curDetailId=null; }
+function editCurTask(){ const id=curDetailId; closeDetail(); openTaskForm(id); }
+function deleteTask(id){ tasks=tasks.filter(t=>t.id!==id); toast('Görev silindi'); render(); }
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function toast(msg,type='info'){
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  const icons={success:'✓',error:'✗',mention:'@',info:'·'};
+  el.innerHTML=`<span style="font-size:16px">${icons[type]||'·'}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateY(8px)'; el.style.transition='all .3s'; setTimeout(()=>el.remove(),300); },3500);
+}
+
+// ── SIDEBAR UNREAD INIT ───────────────────────────────────────────
+function initSidebarUnread(){
+  // Create hidden badge spans for each channel
+  document.querySelectorAll('.ch-item').forEach(btn=>{
+    const ch=btn.dataset.ch;
+    if(ch&&!document.getElementById('ub-'+ch)){
+      const span=document.createElement('span');
+      span.id='ub-'+ch;
+      span.className='ch-unread-num';
+      span.style.display='none';
+      btn.appendChild(span);
+    }
+  });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+document.getElementById('li-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+document.addEventListener('DOMContentLoaded',()=>{ initSidebarUnread(); });
+setTimeout(initSidebarUnread, 100);
+</script>
+</body>
+</html>
