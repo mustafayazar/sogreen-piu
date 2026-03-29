@@ -318,6 +318,50 @@ button,input,select,textarea{font-family:inherit}
 .hint{font-size:11px;color:var(--text3);text-align:center;margin-top:16px}
 .hint code{background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--text)}
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = 'https://fdvtukcamwuewwpcquka.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_U2tLL_96U7jt-BPn7ByAVQ_RRKkevt_';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  realtime: { params: { eventsPerSecond: 10 } }
+});
+// Supabase auth entegrasyonu
+async function supabaseLogin(email, pass) {
+  const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
+  return { data, error };
+}
+async function loadTasksFromDB() {
+  const { data } = await _supabase.from('tasks').select('*').order('created_at', { ascending: false });
+  return data;
+}
+async function saveTaskToDB(taskData) {
+  const { data, error } = await _supabase.from('tasks').insert({
+    title: taskData.title, description: taskData.desc, component: taskData.comp,
+    unit: taskData.unit, status: taskData.status, priority: taskData.prio,
+    deadline: taskData.dl || null, assignees: taskData.ass
+  }).select().single();
+  return data;
+}
+async function saveMsgToDB(channel, content, authorId) {
+  await _supabase.from('messages').insert({ channel, author_id: authorId || null, content });
+}
+// Realtime görev dinleyici
+function subscribeToTasks(onInsert, onUpdate, onDelete) {
+  return _supabase.channel('tasks-realtime')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tasks' }, p => onInsert(p.new))
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks' }, p => onUpdate(p.new))
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'tasks' }, p => onDelete(p.old))
+    .subscribe();
+}
+function subscribeToMessages(channel, onMsg) {
+  return _supabase.channel('msgs-' + channel)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages',
+      filter: 'channel=eq.' + channel }, p => onMsg(p.new))
+    .subscribe();
+}
+console.log('✅ Supabase bağlandı:', SUPABASE_URL);
+</script>
 </head>
 <body>
 
