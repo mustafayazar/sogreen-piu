@@ -1001,8 +1001,7 @@ function renderMessages(){
   c.style.cssText='flex:1;overflow:hidden;display:flex;flex-direction:column;height:100%';
   c.innerHTML=buildChatHTML();
   scrollChat();
-  const ta=document.getElementById('chat-ta');
-  if(ta) ta.addEventListener('input',onChatInput);
+  // oninput attribute ile bağlı, addEventListener gerekmez
 }
 
 function buildChatHTML(){
@@ -1053,7 +1052,7 @@ function buildChatHTML(){
     <div class="chat-input-wrap">
       <div class="chat-input-box" style="position:relative">
         <div id="mention-popup" class="mention-popup"></div>
-        <textarea class="chat-textarea" id="chat-ta" rows="1" placeholder="#${ch.name} kanalına mesaj yaz..." onkeydown="chatKeyDown(event)"></textarea>
+        <textarea class="chat-textarea" id="chat-ta" rows="1" placeholder="#${ch.name} kanalına mesaj yaz..." onkeydown="chatKeyDown(event)" oninput="onChatInput(event)"></textarea>
         <div class="chat-input-bottom">
           <span class="chat-hint">@mention · /task görev bağla · Enter gönder</span>
           <button class="send-btn" onclick="sendMsg()">
@@ -1094,31 +1093,33 @@ function highlightMention(){
 }
 
 function onChatInput(e){
-  const val=e.target.value;
-  e.target.style.height='auto';
-  e.target.style.height=Math.min(e.target.scrollHeight,150)+'px';
-  const lastAt=val.lastIndexOf('@');
+  const el=e.target||document.getElementById('chat-ta');
+  if(!el) return;
+  const val=el.value;
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,150)+'px';
   const popup=document.getElementById('mention-popup');
   if(!popup) return;
+  // @ işaretinin son konumunu bul
+  const cursor=el.selectionStart||val.length;
+  const beforeCursor=val.slice(0,cursor);
+  const lastAt=beforeCursor.lastIndexOf('@');
   if(lastAt>=0){
-    // Cursor @ işaretinden sonra, boşluk yoksa ara
-    const afterAt=val.slice(lastAt+1);
-    if(afterAt.includes(' ') && afterAt.indexOf(' ') < afterAt.length-1){ closeMentionPopup(); return; }
-    const q=afterAt.split(' ')[0].toLowerCase();
-    // İsim, soyisim VEYA kısaltmayla ara (me → Melike, Melis)
+    const q=beforeCursor.slice(lastAt+1).toLowerCase();
+    // Boşluk varsa popup'ı kapat
+    if(q.includes(' ')){ closeMentionPopup(); return; }
     mentionMatches=ML.filter(m=>{
-      const nameParts=m.n.toLowerCase().split(' ');
-      return m.n.toLowerCase().includes(q) || 
-             m.id.toLowerCase().includes(q) ||
-             nameParts.some(p=>p.startsWith(q));
+      const parts=m.n.toLowerCase().split(' ');
+      return parts.some(p=>p.startsWith(q)) || m.id.toLowerCase().includes(q);
     });
     if(mentionMatches.length){
       mentionIdx=-1;
-      popup.innerHTML=mentionMatches.map((m,i)=>`<div class="mention-item" onclick="insertMention('${m.id}')">
+      popup.innerHTML=mentionMatches.map(m=>`<div class="mention-item" onclick="insertMention('${m.id}')">
         <div class="m-av" style="background:${m.c}">${m.i}</div>
         <div><div class="m-name">${m.n}</div><div class="m-role">${m.r}</div></div>
       </div>`).join('');
-      popup.classList.add('open'); return;
+      popup.classList.add('open');
+      return;
     }
   }
   closeMentionPopup();
@@ -1128,9 +1129,17 @@ function closeMentionPopup(){ const p=document.getElementById('mention-popup'); 
 
 function insertMention(uid){
   const ta=document.getElementById('chat-ta'); if(!ta) return;
-  const val=ta.value, lastAt=val.lastIndexOf('@');
-  ta.value=val.slice(0,lastAt)+'@'+uid+' ';
-  closeMentionPopup(); ta.focus();
+  const val=ta.value;
+  const cursor=ta.selectionStart||val.length;
+  const beforeCursor=val.slice(0,cursor);
+  const lastAt=beforeCursor.lastIndexOf('@');
+  if(lastAt<0) return;
+  const afterCursor=val.slice(cursor);
+  ta.value=val.slice(0,lastAt)+'@'+uid+' '+afterCursor;
+  const newPos=lastAt+uid.length+2;
+  ta.setSelectionRange(newPos,newPos);
+  closeMentionPopup();
+  ta.focus();
 }
 
 function sendMsg(){
