@@ -1390,7 +1390,7 @@ setTimeout(initSidebarUnread, 100);
 let _realtimeBooted = false;
 
 async function loadFromSupabase() {
-  if (!window._supabase) return;
+  if (!_supabase) return;
   try {
     // Görevleri yükle
     const { data: dbTasks } = await _supabase.from('tasks').select('*').order('created_at',{ascending:false});
@@ -1483,7 +1483,7 @@ async function loadFromSupabase() {
 const _origInitApp = window.initApp;
 window.initApp = function(){
   _origInitApp && _origInitApp();
-  setTimeout(()=>{ if(window._supabase && window.CU) loadFromSupabase(); }, 500);
+  setTimeout(()=>{ if(_supabase && window.CU) loadFromSupabase(); }, 500);
 };
 
 // sendMsg override — Supabase'e kaydet
@@ -1513,7 +1513,7 @@ window.sendMsg = async function(){
   }
 
   // Supabase'e kaydet
-  if(window._supabase){
+  if(_supabase){
     const {data,error} = await _supabase.from('messages').insert({channel:curChannel,author_id:CU.id,content:text}).select().single();
     if(data){ localMsg.id=data.id; } // local id'yi gerçek id ile değiştir
     if(error) console.error('Mesaj kaydedilemedi:',error);
@@ -1538,14 +1538,14 @@ window.saveTask = async function(){
   if(editingId){
     const t=tasks.find(t=>t.id===editingId); Object.assign(t,data);
     // Supabase güncelle
-    if(window._supabase) await _supabase.from('tasks').update({title:data.title,description:data.desc,component:data.comp,unit:data.unit,status:data.status,priority:data.prio,deadline:data.dl||null,assignees:data.ass}).eq('id',editingId);
+    if(_supabase) await _supabase.from('tasks').update({title:data.title,description:data.desc,component:data.comp,unit:data.unit,status:data.status,priority:data.prio,deadline:data.dl||null,assignees:data.ass}).eq('id',editingId);
     toast('Görev güncellendi','info');
   } else {
     const localId=++NID;
     tasks.push({id:localId,...data,cmt:[],ca:now});
     toast('Görev oluşturuldu!','success');
     // Supabase kaydet
-    if(window._supabase){
+    if(_supabase){
       const {data:dbTask} = await _supabase.from('tasks').insert({title:data.title,description:data.desc,component:data.comp,unit:data.unit,status:data.status,priority:data.prio,deadline:data.dl||null,assignees:data.ass}).select().single();
       if(dbTask){ const idx=tasks.findIndex(t=>t.id===localId); if(idx>=0) tasks[idx].id=dbTask.id; }
     }
